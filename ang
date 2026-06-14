@@ -1,0 +1,1180 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학교 출석 체크 - 단일 HTML</title>
+  <style>
+    :root {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #172033;
+      background: #eef3ff;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(83, 132, 255, 0.25), transparent 38rem),
+        linear-gradient(135deg, #f8fbff 0%, #eef3ff 100%);
+    }
+
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: 0.6; }
+
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(117, 139, 183, 0.22);
+      border-radius: 24px;
+      box-shadow: 0 18px 48px rgba(31, 51, 92, 0.12);
+      padding: 28px;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #3b63df;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+    }
+
+    h1, h2, h3 { margin: 0; line-height: 1.15; }
+    h1 { font-size: clamp(2.1rem, 7vw, 4.2rem); letter-spacing: -0.06em; }
+    h2 { font-size: 1.75rem; }
+    h3 { font-size: 1.25rem; }
+
+    .hero-text, .muted { color: #64718a; }
+    .hero-text { margin: 16px 0 0; font-size: 1.06rem; }
+
+    .hero-badge {
+      display: grid;
+      place-items: center;
+      min-width: 152px;
+      min-height: 152px;
+      border-radius: 32px;
+      color: white;
+      background: linear-gradient(135deg, #3153e8, #7b5cff);
+      font-weight: 900;
+      text-align: center;
+      box-shadow: 0 22px 46px rgba(67, 82, 215, 0.32);
+    }
+
+    .top-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin: 12px 0 0;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .tabs button, .primary, .secondary, .danger, .link-button, .ghost {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-weight: 800;
+    }
+
+    .tabs button, .ghost {
+      background: white;
+      color: #52617a;
+      border: 1px solid rgba(117, 139, 183, 0.28);
+    }
+
+    .tabs button.active, .primary { background: #284fe5; color: white; }
+    .secondary { background: #edf2ff; color: #284fe5; }
+    .danger { background: #fff0f0; color: #d93030; }
+    .link-button { background: transparent; color: #284fe5; padding-left: 0; }
+
+    .grid { display: grid; gap: 18px; }
+    .two-columns { grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr); }
+    .dashboard { display: grid; gap: 18px; }
+
+    .form { display: flex; flex-direction: column; gap: 16px; }
+    label { display: flex; flex-direction: column; gap: 8px; color: #34405a; font-weight: 800; }
+
+    input, textarea {
+      width: 100%;
+      border: 1px solid #d7deef;
+      background: #fbfcff;
+      border-radius: 14px;
+      padding: 13px 14px;
+      color: #172033;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 220px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.86rem;
+      line-height: 1.55;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #4768ea;
+      box-shadow: 0 0 0 4px rgba(71, 104, 234, 0.12);
+    }
+
+    .inline-field { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+
+    .notice {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin: 0;
+      border-radius: 16px;
+      padding: 14px 16px;
+      background: #f2f5fb;
+      color: #47546c;
+      overflow-wrap: anywhere;
+    }
+
+    .notice.success { background: #ecfff5; color: #087b43; }
+    .notice.error { background: #fff0f0; color: #bb1e1e; }
+    .notice.warning { background: #fff8e6; color: #8a5b00; }
+
+    .guide ol { padding-left: 20px; color: #34405a; line-height: 1.8; }
+    .auth-card { max-width: 520px; margin: 0 auto; }
+
+    .dashboard-header, .records-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .session-list { display: grid; gap: 10px; margin-top: 16px; }
+    .session-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      width: 100%;
+      text-align: left;
+      background: #f7f9ff;
+      border: 1px solid #dde5f7;
+      border-radius: 16px;
+      padding: 14px;
+      color: #172033;
+    }
+
+    .session-item.selected {
+      border-color: #4268ee;
+      box-shadow: 0 0 0 4px rgba(66, 104, 238, 0.12);
+    }
+
+    .session-item span, .session-item small { color: #64718a; }
+    .button-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .table-wrap { overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { padding: 14px 12px; border-bottom: 1px solid #e7ecf7; text-align: left; }
+    th { color: #52617a; font-size: 0.9rem; }
+
+    .mini-box {
+      margin-top: 14px;
+      border: 1px dashed #b9c6e9;
+      background: #f8faff;
+      border-radius: 16px;
+      padding: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: #eef3ff;
+      color: #284fe5;
+      font-weight: 900;
+      font-size: 0.84rem;
+    }
+
+    details { margin-top: 14px; }
+    summary { cursor: pointer; font-weight: 900; color: #284fe5; }
+
+    @media (max-width: 820px) {
+      .hero, .dashboard-header, .records-header { align-items: flex-start; flex-direction: column; }
+      .hero-badge { min-width: 100%; min-height: 88px; }
+      .two-columns { grid-template-columns: 1fr; }
+      .tabs { display: grid; grid-template-columns: 1fr 1fr; }
+      .button-row { justify-content: flex-start; }
+      .inline-field { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="text/plain" id="schemaSql">-- 학교 출석 체크 앱 Supabase SQL
+-- Supabase Dashboard > SQL Editor에서 전체 실행하세요.
+
+create extension if not exists pgcrypto;
+
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text,
+  full_name text,
+  role text not null default 'teacher' check (role in ('teacher', 'admin')),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.attendance_sessions (
+  id uuid primary key default gen_random_uuid(),
+  teacher_id uuid not null references public.profiles(id) on delete cascade,
+  title text not null,
+  code text not null unique,
+  starts_at timestamptz not null default now(),
+  ends_at timestamptz not null,
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  constraint title_not_blank check (length(trim(title)) > 0),
+  constraint code_format check (code ~ '^[A-Z0-9]{4,12}$'),
+  constraint valid_time_range check (ends_at > starts_at)
+);
+
+create table if not exists public.attendance_records (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null references public.attendance_sessions(id) on delete cascade,
+  student_number text not null,
+  student_name text not null,
+  checked_in_at timestamptz not null default now(),
+  client_note text,
+  constraint student_number_not_blank check (length(trim(student_number)) > 0),
+  constraint student_name_not_blank check (length(trim(student_name)) > 0),
+  constraint unique_student_per_session unique (session_id, student_number)
+);
+
+create index if not exists idx_attendance_sessions_teacher_id on public.attendance_sessions(teacher_id);
+create index if not exists idx_attendance_sessions_code on public.attendance_sessions(code);
+create index if not exists idx_attendance_records_session_id on public.attendance_records(session_id);
+
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, email, full_name, role)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data ->> 'full_name', split_part(new.email, '@', 1)),
+    'teacher'
+  )
+  on conflict (id) do update
+    set email = excluded.email,
+        full_name = excluded.full_name;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute procedure public.handle_new_user();
+
+create or replace function public.check_in(
+  p_code text,
+  p_student_number text,
+  p_student_name text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_session public.attendance_sessions%rowtype;
+  v_record public.attendance_records%rowtype;
+  v_code text := upper(trim(coalesce(p_code, '')));
+  v_student_number text := trim(coalesce(p_student_number, ''));
+  v_student_name text := trim(coalesce(p_student_name, ''));
+begin
+  if v_code = '' or v_student_number = '' or v_student_name = '' then
+    return jsonb_build_object('ok', false, 'message', '출석 코드, 학번, 이름을 모두 입력하세요.');
+  end if;
+
+  if length(v_student_number) > 30 or length(v_student_name) > 30 then
+    return jsonb_build_object('ok', false, 'message', '학번과 이름은 각각 30자 이하로 입력하세요.');
+  end if;
+
+  select *
+    into v_session
+    from public.attendance_sessions
+   where code = v_code
+     and active = true
+     and now() between starts_at and ends_at
+   limit 1;
+
+  if not found then
+    return jsonb_build_object('ok', false, 'message', '유효한 출석 세션이 아닙니다. 코드 또는 시간을 확인하세요.');
+  end if;
+
+  insert into public.attendance_records (session_id, student_number, student_name)
+  values (v_session.id, v_student_number, v_student_name)
+  on conflict (session_id, student_number)
+  do update set
+    student_name = excluded.student_name,
+    checked_in_at = now()
+  returning * into v_record;
+
+  return jsonb_build_object(
+    'ok', true,
+    'message', '출석이 기록되었습니다.',
+    'session_title', v_session.title,
+    'checked_in_at', v_record.checked_in_at
+  );
+end;
+$$;
+
+revoke all on function public.check_in(text, text, text) from public;
+grant execute on function public.check_in(text, text, text) to anon, authenticated;
+
+alter table public.profiles enable row level security;
+alter table public.attendance_sessions enable row level security;
+alter table public.attendance_records enable row level security;
+
+drop policy if exists "profiles_select_own" on public.profiles;
+drop policy if exists "profiles_update_own" on public.profiles;
+drop policy if exists "sessions_select_own" on public.attendance_sessions;
+drop policy if exists "sessions_insert_own" on public.attendance_sessions;
+drop policy if exists "sessions_update_own" on public.attendance_sessions;
+drop policy if exists "sessions_delete_own" on public.attendance_sessions;
+drop policy if exists "records_select_for_session_owner" on public.attendance_records;
+drop policy if exists "records_update_for_session_owner" on public.attendance_records;
+drop policy if exists "records_delete_for_session_owner" on public.attendance_records;
+
+create policy "profiles_select_own"
+on public.profiles
+for select
+to authenticated
+using (id = auth.uid());
+
+create policy "profiles_update_own"
+on public.profiles
+for update
+to authenticated
+using (id = auth.uid())
+with check (id = auth.uid());
+
+create policy "sessions_select_own"
+on public.attendance_sessions
+for select
+to authenticated
+using (teacher_id = auth.uid());
+
+create policy "sessions_insert_own"
+on public.attendance_sessions
+for insert
+to authenticated
+with check (teacher_id = auth.uid());
+
+create policy "sessions_update_own"
+on public.attendance_sessions
+for update
+to authenticated
+using (teacher_id = auth.uid())
+with check (teacher_id = auth.uid());
+
+create policy "sessions_delete_own"
+on public.attendance_sessions
+for delete
+to authenticated
+using (teacher_id = auth.uid());
+
+create policy "records_select_for_session_owner"
+on public.attendance_records
+for select
+to authenticated
+using (
+  exists (
+    select 1 from public.attendance_sessions s
+    where s.id = attendance_records.session_id
+      and s.teacher_id = auth.uid()
+  )
+);
+
+create policy "records_update_for_session_owner"
+on public.attendance_records
+for update
+to authenticated
+using (
+  exists (
+    select 1 from public.attendance_sessions s
+    where s.id = attendance_records.session_id
+      and s.teacher_id = auth.uid()
+  )
+)
+with check (
+  exists (
+    select 1 from public.attendance_sessions s
+    where s.id = attendance_records.session_id
+      and s.teacher_id = auth.uid()
+  )
+);
+
+create policy "records_delete_for_session_owner"
+on public.attendance_records
+for delete
+to authenticated
+using (
+  exists (
+    select 1 from public.attendance_sessions s
+    where s.id = attendance_records.session_id
+      and s.teacher_id = auth.uid()
+  )
+);</script>
+
+  <script>
+    // 배포 전 이 두 값을 직접 입력하면 모든 사용자가 바로 쓸 수 있습니다.
+    // 비워두면 첫 화면에서 Supabase URL과 anon key를 입력해 현재 브라우저에 저장할 수 있습니다.
+    const SUPABASE_URL = "";
+    const SUPABASE_ANON_KEY = "";
+
+    const STORAGE_CONFIG = "school-attendance-config-v1";
+    const STORAGE_AUTH = "school-attendance-auth-v1";
+
+    const KST_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
+      dateStyle: "short",
+      timeStyle: "medium",
+      timeZone: "Asia/Seoul",
+    });
+
+    const state = {
+      tab: new URLSearchParams(location.search).has("teacher") ? "teacher" : "student",
+      showConfig: false,
+      authMode: "login",
+      config: loadConfig(),
+      auth: loadAuth(),
+      sessions: [],
+      selectedId: "",
+      records: [],
+      message: "",
+      studentResult: null,
+      loading: false,
+      hasLoadedSessions: false,
+    };
+
+    function loadConfig() {
+      const saved = safeJson(localStorage.getItem(STORAGE_CONFIG), {});
+      return {
+        url: (SUPABASE_URL || saved.url || "").replace(/\/$/, ""),
+        key: SUPABASE_ANON_KEY || saved.key || "",
+      };
+    }
+
+    function loadAuth() {
+      return safeJson(localStorage.getItem(STORAGE_AUTH), null);
+    }
+
+    function saveConfig(url, key) {
+      state.config = { url: url.replace(/\/$/, ""), key };
+      localStorage.setItem(STORAGE_CONFIG, JSON.stringify(state.config));
+      state.showConfig = false;
+      state.message = "Supabase 설정이 저장되었습니다.";
+      render();
+    }
+
+    function saveAuth(auth) {
+      state.auth = auth;
+      if (auth) localStorage.setItem(STORAGE_AUTH, JSON.stringify(auth));
+      else localStorage.removeItem(STORAGE_AUTH);
+    }
+
+    function safeJson(value, fallback) {
+      try { return value ? JSON.parse(value) : fallback; }
+      catch { return fallback; }
+    }
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;"
+      }[char]));
+    }
+
+    function formatDateTime(value) {
+      return KST_FORMATTER.format(new Date(value));
+    }
+
+    function toLocalInputValue(date) {
+      const offset = date.getTimezoneOffset();
+      const local = new Date(date.getTime() - offset * 60_000);
+      return local.toISOString().slice(0, 16);
+    }
+
+    function generateCode(length = 6) {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+    }
+
+    function csvEscape(value) {
+      return `"${String(value ?? "").replace(/"/g, '""')}"`;
+    }
+
+    function getInitialCode() {
+      return new URLSearchParams(location.search).get("code") || "";
+    }
+
+    function getStudentLink(code) {
+      const base = location.protocol === "file:"
+        ? location.href.split("?")[0].split("#")[0]
+        : `${location.origin}${location.pathname}`;
+      return `${base}?code=${encodeURIComponent(code)}`;
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        state.message = "복사했습니다.";
+      } catch {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+        state.message = "복사했습니다.";
+      }
+      render();
+    }
+
+    function hasConfig() {
+      return Boolean(state.config.url && state.config.key);
+    }
+
+    function restHeaders(authRequired = false, extra = {}) {
+      const token = authRequired ? state.auth?.access_token : state.config.key;
+      return {
+        apikey: state.config.key,
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        ...extra,
+      };
+    }
+
+    async function parseResponse(response) {
+      const text = await response.text();
+      const data = text ? safeJson(text, text) : null;
+      if (!response.ok) {
+        const message = typeof data === "object" && data
+          ? data.message || data.error_description || data.error || data.hint || JSON.stringify(data)
+          : data || `HTTP ${response.status}`;
+        throw new Error(message);
+      }
+      return data;
+    }
+
+    async function refreshAuthIfNeeded() {
+      if (!state.auth?.refresh_token) return;
+      const willExpireSoon = state.auth.expires_at && state.auth.expires_at < Math.floor(Date.now() / 1000) + 60;
+      if (!willExpireSoon) return;
+      const response = await fetch(`${state.config.url}/auth/v1/token?grant_type=refresh_token`, {
+        method: "POST",
+        headers: {
+          apikey: state.config.key,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refresh_token: state.auth.refresh_token }),
+      });
+      const data = await parseResponse(response);
+      storeAuthFromResponse(data);
+    }
+
+    function storeAuthFromResponse(data) {
+      const expiresAt = data.expires_at || Math.floor(Date.now() / 1000) + (data.expires_in || 3600);
+      saveAuth({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: expiresAt,
+        user: data.user,
+      });
+    }
+
+    async function restRequest(path, options = {}) {
+      const authRequired = options.authRequired || false;
+      if (authRequired) await refreshAuthIfNeeded();
+      const response = await fetch(`${state.config.url}/rest/v1/${path}`, {
+        method: options.method || "GET",
+        headers: restHeaders(authRequired, options.headers || {}),
+        body: options.body ? JSON.stringify(options.body) : undefined,
+      });
+      return parseResponse(response);
+    }
+
+    async function signIn(email, password) {
+      const response = await fetch(`${state.config.url}/auth/v1/token?grant_type=password`, {
+        method: "POST",
+        headers: {
+          apikey: state.config.key,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await parseResponse(response);
+      storeAuthFromResponse(data);
+    }
+
+    async function signUp(email, password, fullName) {
+      const response = await fetch(`${state.config.url}/auth/v1/signup`, {
+        method: "POST",
+        headers: {
+          apikey: state.config.key,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password, data: { full_name: fullName } }),
+      });
+      const data = await parseResponse(response);
+      if (data.session && data.access_token) storeAuthFromResponse(data);
+      return data;
+    }
+
+    async function checkIn(code, studentNumber, studentName) {
+      return restRequest("rpc/check_in", {
+        method: "POST",
+        body: {
+          p_code: code.trim().toUpperCase(),
+          p_student_number: studentNumber.trim(),
+          p_student_name: studentName.trim(),
+        },
+      });
+    }
+
+    async function fetchSessions() {
+      const data = await restRequest("attendance_sessions?select=*&order=created_at.desc", { authRequired: true });
+      state.sessions = Array.isArray(data) ? data : [];
+      if (!state.selectedId && state.sessions.length > 0) state.selectedId = state.sessions[0].id;
+      state.hasLoadedSessions = true;
+    }
+
+    async function fetchRecords(sessionId) {
+      const data = await restRequest(
+        `attendance_records?select=*&session_id=eq.${encodeURIComponent(sessionId)}&order=checked_in_at.asc`,
+        { authRequired: true }
+      );
+      state.records = Array.isArray(data) ? data : [];
+    }
+
+    async function createSession({ title, code, startsAt, endsAt }) {
+      const data = await restRequest("attendance_sessions?select=*", {
+        method: "POST",
+        authRequired: true,
+        headers: { Prefer: "return=representation" },
+        body: {
+          teacher_id: state.auth.user.id,
+          title: title.trim(),
+          code: code.trim().toUpperCase(),
+          starts_at: new Date(startsAt).toISOString(),
+          ends_at: new Date(endsAt).toISOString(),
+          active: true,
+        },
+      });
+      const created = Array.isArray(data) ? data[0] : data;
+      if (created) {
+        state.sessions = [created, ...state.sessions];
+        state.selectedId = created.id;
+        state.records = [];
+      }
+    }
+
+    async function closeSession(sessionId) {
+      await restRequest(`attendance_sessions?id=eq.${encodeURIComponent(sessionId)}`, {
+        method: "PATCH",
+        authRequired: true,
+        headers: { Prefer: "return=minimal" },
+        body: { active: false },
+      });
+      state.sessions = state.sessions.map((item) => item.id === sessionId ? { ...item, active: false } : item);
+    }
+
+    function selectedSession() {
+      return state.sessions.find((item) => item.id === state.selectedId) || null;
+    }
+
+    function shell(content) {
+      return `
+        <main class="page">
+          <section class="hero card">
+            <div>
+              <p class="eyebrow">Single HTML + Supabase</p>
+              <h1>학교 출석 체크</h1>
+              <p class="hero-text">교사는 출석 세션과 코드를 만들고, 학생은 코드·학번·이름만 입력해서 출석합니다.</p>
+            </div>
+            <div class="hero-badge">QR/코드<br>출석</div>
+          </section>
+          <div class="top-actions">
+            <button class="ghost" id="openConfig">Supabase 설정</button>
+          </div>
+          ${hasConfig() ? `
+            <nav class="tabs" aria-label="화면 선택">
+              <button id="studentTab" class="${state.tab === "student" ? "active" : ""}">학생 출석</button>
+              <button id="teacherTab" class="${state.tab === "teacher" ? "active" : ""}">교사용 관리</button>
+            </nav>
+          ` : ""}
+          ${state.message ? `<p class="notice">${esc(state.message)}</p><br>` : ""}
+          ${content}
+        </main>
+      `;
+    }
+
+    function configView() {
+      const sql = document.getElementById("schemaSql").textContent.trim();
+      return shell(`
+        <section class="grid two-columns">
+          <form class="card form" id="configForm">
+            <h2>Supabase 연결 설정</h2>
+            <p class="muted">단일 HTML 파일이라 Vite 환경 변수를 쓰지 않습니다. 배포 전 파일 상단의 <strong>SUPABASE_URL</strong>, <strong>SUPABASE_ANON_KEY</strong>에 값을 넣거나, 아래에 입력해 현재 브라우저에 저장하세요.</p>
+            <label>
+              Supabase URL
+              <input id="configUrl" placeholder="https://프로젝트ID.supabase.co" value="${esc(state.config.url)}" required />
+            </label>
+            <label>
+              Supabase anon public key
+              <input id="configKey" placeholder="eyJhbGciOi..." value="${esc(state.config.key)}" required />
+            </label>
+            <button class="primary">설정 저장</button>
+            ${hasConfig() ? `<button type="button" class="secondary" id="backFromConfig">앱으로 돌아가기</button>` : ""}
+          </form>
+
+          <aside class="card guide">
+            <h2>Supabase DB 만들기</h2>
+            <ol>
+              <li>Supabase 프로젝트를 만듭니다.</li>
+              <li>SQL Editor에서 아래 SQL을 전체 실행합니다.</li>
+              <li>Project URL과 anon key를 이 HTML에 입력합니다.</li>
+              <li>교사 계정 생성 후 Auth 설정에서 공개 회원가입을 끄는 것을 권장합니다.</li>
+            </ol>
+            <button class="secondary" id="copySql">SQL 전체 복사</button>
+            <details>
+              <summary>SQL 보기</summary>
+              <textarea readonly>${esc(sql)}</textarea>
+            </details>
+          </aside>
+        </section>
+      `);
+    }
+
+    function studentView() {
+      const defaultCode = esc(getInitialCode());
+      return shell(`
+        <section class="grid two-columns">
+          <form class="card form" id="studentForm">
+            <h2>출석하기</h2>
+            <label>
+              출석 코드
+              <input id="studentCode" value="${defaultCode}" placeholder="예: A7K2Q9" maxlength="12" required />
+            </label>
+            <label>
+              학번
+              <input id="studentNumber" placeholder="예: 20315" maxlength="30" required />
+            </label>
+            <label>
+              이름
+              <input id="studentName" placeholder="예: 홍길동" maxlength="30" required />
+            </label>
+            <button class="primary" id="studentSubmit" ${state.loading ? "disabled" : ""}>${state.loading ? "기록 중..." : "출석 기록"}</button>
+            ${state.studentResult ? `
+              <div class="notice ${state.studentResult.ok ? "success" : "error"}">
+                <strong>${esc(state.studentResult.message)}</strong>
+                ${state.studentResult.session_title ? `<span>수업: ${esc(state.studentResult.session_title)}</span>` : ""}
+                ${state.studentResult.checked_in_at ? `<span>시간: ${esc(formatDateTime(state.studentResult.checked_in_at))}</span>` : ""}
+              </div>
+            ` : ""}
+          </form>
+
+          <aside class="card guide">
+            <h2>사용 방법</h2>
+            <ol>
+              <li>교사가 알려준 출석 코드를 입력합니다.</li>
+              <li>학번과 이름을 입력합니다.</li>
+              <li>중복 제출하면 같은 학번의 출석 시간이 최신으로 갱신됩니다.</li>
+            </ol>
+            <p class="muted">주민번호, 전화번호, 주소 같은 민감한 개인정보는 입력하지 마세요.</p>
+          </aside>
+        </section>
+      `);
+    }
+
+    function teacherAuthView() {
+      return shell(`
+        <section class="card auth-card">
+          <h2>교사용 ${state.authMode === "login" ? "로그인" : "회원가입"}</h2>
+          <form class="form" id="authForm">
+            ${state.authMode === "signup" ? `
+              <label>
+                교사 이름
+                <input id="teacherName" required />
+              </label>
+            ` : ""}
+            <label>
+              이메일
+              <input id="teacherEmail" type="email" required />
+            </label>
+            <label>
+              비밀번호
+              <input id="teacherPassword" type="password" minlength="6" required />
+            </label>
+            <button class="primary" ${state.loading ? "disabled" : ""}>${state.loading ? "처리 중..." : state.authMode === "login" ? "로그인" : "가입하기"}</button>
+          </form>
+          <button class="link-button" id="toggleAuthMode">${state.authMode === "login" ? "처음 사용하는 교사인가요? 회원가입" : "이미 계정이 있나요? 로그인"}</button>
+          <p class="notice warning">운영용으로 쓸 때는 교사 계정을 만든 뒤 Supabase Auth 설정에서 공개 회원가입을 꺼두는 것을 권장합니다.</p>
+        </section>
+      `);
+    }
+
+    function dashboardView() {
+      const selected = selectedSession();
+      const startsDefault = toLocalInputValue(new Date());
+      const endsDefault = toLocalInputValue(new Date(Date.now() + 2 * 60 * 60 * 1000));
+      const newCode = generateCode();
+      return shell(`
+        <section class="dashboard">
+          <div class="dashboard-header card">
+            <div>
+              <p class="eyebrow">Teacher</p>
+              <h2>출석 관리</h2>
+              <p class="muted">로그인: ${esc(state.auth?.user?.email || "")}</p>
+            </div>
+            <button class="secondary" id="logoutBtn">로그아웃</button>
+          </div>
+
+          <div class="grid two-columns">
+            <form class="card form" id="createSessionForm">
+              <h3>새 출석 세션 만들기</h3>
+              <label>
+                수업명
+                <input id="sessionTitle" placeholder="예: 2학년 3반 수학" required />
+              </label>
+              <label>
+                출석 코드
+                <div class="inline-field">
+                  <input id="sessionCode" value="${newCode}" maxlength="12" required />
+                  <button type="button" class="secondary" id="randomCode">랜덤</button>
+                </div>
+              </label>
+              <label>
+                시작 시간
+                <input id="startsAt" type="datetime-local" value="${startsDefault}" required />
+              </label>
+              <label>
+                종료 시간
+                <input id="endsAt" type="datetime-local" value="${endsDefault}" required />
+              </label>
+              <button class="primary" ${state.loading ? "disabled" : ""}>${state.loading ? "생성 중..." : "세션 생성"}</button>
+            </form>
+
+            <div class="card">
+              <h3>세션 목록</h3>
+              ${!state.hasLoadedSessions ? `<p class="muted">세션을 불러오는 중...</p>` : state.sessions.length === 0 ? `
+                <p class="muted">아직 만든 출석 세션이 없습니다.</p>
+              ` : `
+                <div class="session-list">
+                  ${state.sessions.map((item) => `
+                    <button class="session-item ${item.id === state.selectedId ? "selected" : ""}" data-session-id="${esc(item.id)}">
+                      <strong>${esc(item.title)}</strong>
+                      <span>코드 <span class="pill">${esc(item.code)}</span> · ${item.active ? "진행 중" : "종료됨"}</span>
+                      <small>${esc(formatDateTime(item.starts_at))} ~ ${esc(formatDateTime(item.ends_at))}</small>
+                    </button>
+                  `).join("")}
+                </div>
+              `}
+            </div>
+          </div>
+
+          <div class="card records-card">
+            <div class="records-header">
+              <div>
+                <h3>출석 현황</h3>
+                ${selected ? `
+                  <p class="muted">${esc(selected.title)} · 코드 <strong>${esc(selected.code)}</strong> · ${state.records.length}명 출석</p>
+                ` : `<p class="muted">세션을 선택하세요.</p>`}
+              </div>
+              <div class="button-row">
+                ${selected?.active ? `<button class="danger" id="closeSessionBtn">세션 종료</button>` : ""}
+                <button class="secondary" id="refreshRecords" ${!selected ? "disabled" : ""}>새로고침</button>
+                <button class="secondary" id="copyStudentLink" ${!selected ? "disabled" : ""}>학생 링크 복사</button>
+                <button class="secondary" id="exportCsv" ${!selected || state.records.length === 0 ? "disabled" : ""}>CSV 다운로드</button>
+              </div>
+            </div>
+
+            ${selected ? `
+              <div class="mini-box">
+                <strong>학생에게 공유할 코드:</strong> <span class="pill">${esc(selected.code)}</span><br>
+                <span class="muted">링크: ${esc(getStudentLink(selected.code))}</span>
+              </div>
+            ` : ""}
+
+            ${!selected ? "" : state.records.length === 0 ? `
+              <p class="muted">아직 출석 기록이 없습니다.</p>
+            ` : `
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>번호</th><th>학번</th><th>이름</th><th>출석 시각</th></tr>
+                  </thead>
+                  <tbody>
+                    ${state.records.map((record, index) => `
+                      <tr>
+                        <td>${index + 1}</td>
+                        <td>${esc(record.student_number)}</td>
+                        <td>${esc(record.student_name)}</td>
+                        <td>${esc(formatDateTime(record.checked_in_at))}</td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+              </div>
+            `}
+          </div>
+        </section>
+      `);
+    }
+
+    function render() {
+      const app = document.getElementById("app");
+      if (!hasConfig() || state.showConfig) app.innerHTML = configView();
+      else if (state.tab === "student") app.innerHTML = studentView();
+      else if (!state.auth?.access_token) app.innerHTML = teacherAuthView();
+      else app.innerHTML = dashboardView();
+      bindEvents();
+    }
+
+    function bindEvents() {
+      const openConfig = document.getElementById("openConfig");
+      if (openConfig) openConfig.addEventListener("click", () => { state.showConfig = true; render(); });
+
+      const backFromConfig = document.getElementById("backFromConfig");
+      if (backFromConfig) backFromConfig.addEventListener("click", () => { state.showConfig = false; render(); });
+
+      const studentTab = document.getElementById("studentTab");
+      if (studentTab) studentTab.addEventListener("click", () => { state.tab = "student"; state.message = ""; render(); });
+
+      const teacherTab = document.getElementById("teacherTab");
+      if (teacherTab) teacherTab.addEventListener("click", async () => {
+        state.tab = "teacher";
+        state.message = "";
+        render();
+        if (state.auth?.access_token && !state.hasLoadedSessions) await loadDashboardData();
+      });
+
+      const configForm = document.getElementById("configForm");
+      if (configForm) configForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        saveConfig(
+          document.getElementById("configUrl").value.trim(),
+          document.getElementById("configKey").value.trim()
+        );
+      });
+
+      const copySql = document.getElementById("copySql");
+      if (copySql) copySql.addEventListener("click", () => copyText(document.getElementById("schemaSql").textContent.trim()));
+
+      const studentForm = document.getElementById("studentForm");
+      if (studentForm) studentForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const code = document.getElementById("studentCode").value;
+        const studentNumber = document.getElementById("studentNumber").value;
+        const studentName = document.getElementById("studentName").value;
+        state.loading = true;
+        state.studentResult = null;
+        render();
+        try {
+          const result = await checkIn(code, studentNumber, studentName);
+          state.studentResult = result;
+        } catch (error) {
+          state.studentResult = { ok: false, message: error.message };
+        } finally {
+          state.loading = false;
+          render();
+        }
+      });
+
+      const authForm = document.getElementById("authForm");
+      if (authForm) authForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const email = document.getElementById("teacherEmail").value.trim();
+        const password = document.getElementById("teacherPassword").value;
+        const fullName = state.authMode === "signup" ? document.getElementById("teacherName").value.trim() : "";
+        state.loading = true;
+        state.message = "";
+        render();
+        try {
+          if (state.authMode === "login") {
+            await signIn(email, password);
+            state.message = "로그인되었습니다.";
+            await loadDashboardData();
+          } else {
+            const data = await signUp(email, password, fullName);
+            if (data.session || data.access_token) {
+              state.message = "가입 및 로그인이 완료되었습니다.";
+              await loadDashboardData();
+            } else {
+              state.message = "가입이 완료되었습니다. 이메일 확인 설정이 켜져 있으면 메일 인증 후 로그인하세요.";
+              state.authMode = "login";
+            }
+          }
+        } catch (error) {
+          state.message = error.message;
+        } finally {
+          state.loading = false;
+          render();
+        }
+      });
+
+      const toggleAuthMode = document.getElementById("toggleAuthMode");
+      if (toggleAuthMode) toggleAuthMode.addEventListener("click", () => {
+        state.authMode = state.authMode === "login" ? "signup" : "login";
+        state.message = "";
+        render();
+      });
+
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) logoutBtn.addEventListener("click", () => {
+        saveAuth(null);
+        state.sessions = [];
+        state.records = [];
+        state.selectedId = "";
+        state.hasLoadedSessions = false;
+        state.message = "로그아웃되었습니다.";
+        render();
+      });
+
+      const createSessionForm = document.getElementById("createSessionForm");
+      if (createSessionForm) createSessionForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const formData = {
+          title: document.getElementById("sessionTitle").value,
+          code: document.getElementById("sessionCode").value,
+          startsAt: document.getElementById("startsAt").value,
+          endsAt: document.getElementById("endsAt").value,
+        };
+        state.loading = true;
+        state.message = "";
+        render();
+        try {
+          await createSession(formData);
+          state.message = "출석 세션이 생성되었습니다.";
+        } catch (error) {
+          state.message = error.message;
+        } finally {
+          state.loading = false;
+          render();
+        }
+      });
+
+      const randomCode = document.getElementById("randomCode");
+      if (randomCode) randomCode.addEventListener("click", () => {
+        document.getElementById("sessionCode").value = generateCode();
+      });
+
+      document.querySelectorAll(".session-item").forEach((button) => {
+        button.addEventListener("click", async () => {
+          state.selectedId = button.dataset.sessionId;
+          state.records = [];
+          render();
+          await loadRecordsForSelected();
+        });
+      });
+
+      const refreshRecords = document.getElementById("refreshRecords");
+      if (refreshRecords) refreshRecords.addEventListener("click", () => loadRecordsForSelected());
+
+      const closeSessionBtn = document.getElementById("closeSessionBtn");
+      if (closeSessionBtn) closeSessionBtn.addEventListener("click", async () => {
+        const selected = selectedSession();
+        if (!selected) return;
+        if (!confirm("이 출석 세션을 종료할까요? 종료 후 학생은 더 이상 출석할 수 없습니다.")) return;
+        try {
+          await closeSession(selected.id);
+          state.message = "출석 세션을 종료했습니다.";
+          render();
+        } catch (error) {
+          state.message = error.message;
+          render();
+        }
+      });
+
+      const copyStudentLink = document.getElementById("copyStudentLink");
+      if (copyStudentLink) copyStudentLink.addEventListener("click", () => {
+        const selected = selectedSession();
+        if (selected) copyText(getStudentLink(selected.code));
+      });
+
+      const exportCsv = document.getElementById("exportCsv");
+      if (exportCsv) exportCsv.addEventListener("click", exportRecordsCsv);
+    }
+
+    async function loadDashboardData() {
+      try {
+        await fetchSessions();
+        if (state.selectedId) await fetchRecords(state.selectedId);
+      } catch (error) {
+        state.message = error.message;
+      }
+      render();
+    }
+
+    async function loadRecordsForSelected() {
+      const selected = selectedSession();
+      if (!selected) return;
+      try {
+        await fetchRecords(selected.id);
+        state.message = "";
+      } catch (error) {
+        state.message = error.message;
+      }
+      render();
+    }
+
+    function exportRecordsCsv() {
+      const selected = selectedSession();
+      if (!selected) return;
+      const header = ["수업명", "출석코드", "학번", "이름", "출석시각"];
+      const rows = state.records.map((record) => [
+        selected.title,
+        selected.code,
+        record.student_number,
+        record.student_name,
+        formatDateTime(record.checked_in_at),
+      ]);
+      const csv = [header, ...rows].map((row) => row.map(csvEscape).join(",")).join("\n");
+      const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${selected.title}_출석명단.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    render();
+    if (state.tab === "teacher" && hasConfig() && state.auth?.access_token) loadDashboardData();
+  </script>
+</body>
+</html>
